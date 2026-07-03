@@ -1,0 +1,90 @@
+---
+description: Discipline for using Context7 as the documentation truth layer
+alwaysApply: true
+---
+
+# Context7 Reference Discipline
+
+Используй Context7 как источник актуальной технической документации и library/framework truth, когда задача требует не догадок, а точного reference.
+
+Context7 - это не замена мышлению.
+Это documentation layer внутри общей execution system.
+
+## Когда использовать Context7
+
+Подключай Context7, если:
+
+- задача зависит от конкретной библиотеки, framework, SDK или API
+- нужно проверить актуальный синтаксис, параметры, сигнатуры или supported capabilities
+- нужно уточнить рекомендованный implementation pattern
+- есть риск опереться на устаревшее знание
+- stack unfamiliar, fast-moving или version-sensitive
+- нужно подтвердить ограничения, supported flows, edge cases или официально рекомендуемый подход
+- баг, архитектурное решение или implementation зависит от точного поведения внешнего инструмента
+
+## Когда Context7 особенно полезен
+
+Используй его в связке с:
+
+- `architecture-review`, если решение зависит от возможностей библиотеки или framework constraints
+- `bug-investigation`, если нужно проверить реальное expected behavior инструмента
+- `research-synthesis`, если часть research требует технически точного reference
+- implementation, если без документации высок риск написать ложное или устаревшее решение
+
+## Когда НЕ использовать Context7
+
+Не подключай Context7, если:
+
+- задача не требует документации
+- ответ уже очевиден из локального кода, файлов или контекста
+- проблема в product logic, UX, flow design или scope, а не в API knowledge
+- ты пытаешься заменить ясное мышление лишним doc lookup
+- нужен judgment, synthesis или prioritization, а не library reference
+- вопрос можно решить быстрее и точнее из уже доступного project context
+
+## Как правильно использовать Context7
+
+При обращении к Context7:
+
+1. Сначала чётко определи, что именно нужно проверить
+- API behavior
+- configuration pattern
+- version-specific usage
+- integration rule
+- supported feature
+- best practice
+- official limitation
+
+2. Не тащи лишнюю документацию
+Ищи только тот reference, который реально нужен для текущего шага.
+
+3. После получения данных интерпретируй их
+- что именно подтверждено
+- что это меняет в решении
+- как это влияет на implementation
+- есть ли ограничения
+- нужен ли другой подход
+
+4. Не копируй docs в работу без осмысления
+Documentation - это вход в решение, а не само решение.
+
+## Поведенческие правила
+
+- сначала локальный контекст, потом внешний reference
+- сначала вопрос, потом lookup
+- сначала точечная проверка, потом вывод
+- не подменять архитектурное мышление документацией
+- не превращать Context7 в ритуал на каждую задачу
+- использовать его там, где он снижает риск ошибки, а не там, где он просто "может пригодиться"
+
+## Базовые принципы
+
+- Context7 = источник актуальной технической правды
+- не default mode
+- использовать точечно
+- docs support decisions, not replace them
+- reference before risky implementation
+- official behavior важнее догадки по памяти
+- после lookup всегда нужен вывод, а не просто пересказ
+
+Хорошее использование Context7 - это когда система не галлюцинирует технические детали, не опирается на устаревшую память и принимает implementation decisions на основе актуального reference.

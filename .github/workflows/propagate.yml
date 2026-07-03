@@ -1,0 +1,80 @@
+name: Propagate agents-core
+
+# Раздаёт слой agents-core по всем проектам из projects.json:
+# на каждое изменение core открывает sync-PR в каждом downstream-репозитории.
+#
+# Требует секрет PROPAGATE_TOKEN — GitHub PAT (classic: scope `repo`, или
+# fine-grained с Contents+Pull requests: write на целевые репо). GITHUB_TOKEN
+# по умолчанию не может писать в чужие репозитории, поэтому нужен PAT.
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".cursor/**"
+      - ".claude/**"
+      - "CLAUDE.md"
+      - "scripts/**"
+  workflow_dispatch: {}
+
+jobs:
+  matrix:
+    runs-on: ubuntu-latest
+    outputs:
+      projects: ${{ steps.load.outputs.projects }}
+      count: ${{ steps.load.outputs.count }}
+    steps:
+      - uses: actions/checkout@v4
+      - id: load
+        run: |
+          projects=$(jq -c '.projects' projects.json)
+          count=$(jq '.projects | length' projects.json)
+          echo "projects=$projects" >> "$GITHUB_OUTPUT"
+          echo "count=$count" >> "$GITHUB_OUTPUT"
+          echo "Проектов в реестре: $count"
+
+  propagate:
+    needs: matrix
+    if: ${{ needs.matrix.outputs.count != '0' }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        repo: ${{ fromJson(needs.matrix.outputs.projects) }}
+    steps:
+      - name: Checkout agents-core (источник)
+        uses: actions/checkout@v4
+        with:
+          path: core
+
+      - name: Checkout ${{ matrix.repo }} (цель)
+        uses: actions/checkout@v4
+        with:
+          repository: ${{ matrix.repo }}
+          token: ${{ secrets.PROPAGATE_TOKEN }}
+          path: target
+
+      - name: Sync слой agents-core в проект
+        env:
+          AGENTS_CORE_SRC: ${{ github.workspace }}/core
+        run: |
+          bash "$AGENTS_CORE_SRC/scripts/sync.sh" "${{ github.workspace }}/target"
+
+      - name: Открыть sync-PR
+        uses: peter-evans/create-pull-request@v6
+        with:
+          token: ${{ secrets.PROPAGATE_TOKEN }}
+          path: target
+          branch: agents-core-sync
+          base: main
+          commit-message: "chore: sync agents-core (${{ github.sha }})"
+          title: "chore: sync agents-core"
+          body: |
+            Автоматическая раздача обновлённого слоя agents-core.
+
+            Источник: ${{ github.repository }}@${{ github.sha }}
+
+            Затронуты managed-файлы (`.cursor/`, `.claude/`, `CLAUDE.md`).
+            Локальные правила (`.cursor/rules/local/`) и project-local секция
+            `CLAUDE.md` не тронуты.
+          delete-branch: true

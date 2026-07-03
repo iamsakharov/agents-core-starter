@@ -1,0 +1,69 @@
+---
+description: Как заводить новый проект — по команде «создай проект» вживить слой agents-core, завести GitHub-репо и roadmap
+alwaysApply: true
+---
+
+# Project Bootstrap
+
+Правило срабатывает, когда пользователь просит создать проект:
+«создай проект», «заведи проект», «new project», с указанием имени и (опционально) репо.
+
+## Триггер и разбор
+
+Формат: **«создай проект `<имя>` [`<repo>`]»**.
+
+- `<имя>` — имя проекта (папка `<PROJECTS_DIR>/<имя>`, по умолчанию `$HOME/projects/<имя>`).
+- `<repo>` — GitHub-репо: полный URL, `owner/name` или просто `name`.
+  Если не указан → `<ваш-github-логин>/<имя>` (логин берётся из `gh api user`). Новые репо создаются **private**.
+
+Если имя не задано — уточнить. Репо не задан — применить дефолт и сообщить об этом.
+
+## Что делает создание проекта
+
+Исполнитель — `scripts/create-project.sh` из agents-core. Он:
+
+1. создаёт папку и `git init` (branch `main`);
+2. **вживляет весь слой agents-core физически в репо** (`scripts/sync.sh`): правила флэтом
+   в `.cursor/rules/`, агенты/skills/hooks, `CLAUDE.md`, `.cursor/environment.json`, `.cursor/sync.sh`;
+3. заводит `roadmap/` (`_index.md`, `_status.md`, `epics/`, `tasks/`) и `REFINEMENT-LOG.md`;
+4. создаёт заготовку локальных правил `.cursor/rules/local/`;
+5. initial commit → создаёт/привязывает GitHub-репо (`gh`) → `push`;
+6. регистрирует проект в `projects.json` agents-core (для Action-пропагации).
+
+Команда (локально):
+
+```bash
+bash <путь-к-agents-core>/scripts/create-project.sh <имя> <repo>
+```
+
+## Почему именно так (не симлинки)
+
+Правила и весь слой лежат в репо проекта **физически, а не симлинком**. Это обязательное условие
+для облачных агентов (Cursor iOS, Claude Code web): они клонируют только репо проекта в чистую VM,
+где нет ни agents-core, ни `~/.cursor`. Симлинк там мёртв — правила бы не загрузились.
+
+## Модель managed / local
+
+- **managed** (владеет agents-core, перезаписывается синком): `.cursor/rules/*.mdc`, `.cursor/agents/`,
+  `.cursor/skills/`, `.claude/agents/`, `.claude/skills/`, `.claude/settings.json` (baseline),
+  `.cursor/hooks.json`, `.cursor/mcp.json`, managed-часть `CLAUDE.md`.
+- **local** (проектное, sync не трогает): `.cursor/rules/local/`, project-local секция `CLAUDE.md`
+  ниже маркера, `roadmap/`, `REFINEMENT-LOG.md`, код проекта.
+
+Локальные правила проекта — только в `.cursor/rules/local/` (`.mdc` с `alwaysApply`), импорт — в
+project-local секции `CLAUDE.md`.
+
+## После создания
+
+- зафиксировать цель проекта в `roadmap/_index.md` и первый статус в `roadmap/_status.md`;
+- если реестр `projects.json` изменился — **закоммитить и запушить agents-core**, иначе пропагация
+  не подхватит новый проект (git-мутация agents-core — с явного согласия пользователя);
+- дальше работать по обычному циклу: planning → execution → review → refinement → closure.
+
+## Обновление правил в существующем проекте
+
+Раздача из agents-core идёт автоматически (GitHub Action → sync-PR). Вручную обновить проект:
+
+```bash
+bash .cursor/sync.sh .
+```

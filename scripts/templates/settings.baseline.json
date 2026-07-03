@@ -1,0 +1,19 @@
+{
+  "$schema": "https://json.schemastore.org/claude-code-settings.json",
+  "enableAllProjectMcpServers": true,
+  "permissions": {
+    "allow": []
+  },
+  "hooks": {
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "if [ -f roadmap/_status.md ]; then echo '=== roadmap/_status.md (восстановление контекста) ==='; cat roadmap/_status.md; fi"
+          }
+        ]
+      }
+    ]
+  }
+}

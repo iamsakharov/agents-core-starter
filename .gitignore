@@ -1,0 +1,8 @@
+# OS
+.DS_Store
+
+# Cursor internal state (not config)
+.cursor/worktrees/
+
+# Backup from skills migration
+~/.cursor/skills_backup_*

@@ -1,0 +1,40 @@
+{
+  "version": 1,
+  "hooks": {
+    "sessionStart": [
+      {
+        "type": "prompt",
+        "timeout": 20,
+        "prompt": "At the start of every session, orient before acting.\n\n1. Restore context:\n- Read roadmap/_status.md if it exists to understand current task state.\n- Identify session type: new task / continuation / bug / review / refinement / release / architecture.\n- If a prior plan or iteration context exists, restore it before execution.\n\n2. Define the working goal:\n- What must be advanced in this session.\n- What counts as done for this session chunk.\n- Do not work by inertia.\n\n3. Structure before executing:\n- If a valid plan exists, follow it. If a non-trivial task has no structure, create structure first.\n- Large tasks require decomposition. No giant one-shot runs.\n- Choose the correct mode: planning / exploration / implementation / review / refinement / release summary.\n\n4. Quick risk check:\n- Unclear scope, hidden dependencies, architecture risk, regression risk, missing review requirement.\n\n5. Closure discipline from the start:\n- Every session must converge to: completed chunk / documented blocker / explicit next step / release-ready summary.\n- Do not stop in a vague state.\n\nBase rule: orient → structure → act. Never invert this order."
+      }
+    ],
+    "beforeShellExecution": [
+      {
+        "type": "prompt",
+        "timeout": 20,
+        "prompt": "Before any shell action, verify it is justified.\n\n1. Is shell actually needed? Can this be solved by reading files, code analysis, or a non-shell step? If not needed, do not use it.\n\n2. Define the objective: What exactly do you want to learn, validate, or change? What concrete result should this command produce?\n\n3. Assess scope and impact: Is it read-only or mutating? Could it modify files, delete data, alter git state, change config, or affect dependencies? Narrow scope to what is strictly necessary.\n\n4. Extra caution for: delete, overwrite, mass edits, git mutations, migrations, permission changes, dependency installs. These require explicit justification.\n\n5. After the command: interpret the output before continuing. What did it prove? Does it change the plan? Is another command still needed?\n\nBase rule: objective → risk → scope → run → interpret. Do not run commands by inertia."
+      }
+    ],
+    "afterFileEdit": [
+      {
+        "type": "prompt",
+        "timeout": 20,
+        "prompt": "After any file edit, verify the change is actually better.\n\n1. State what changed: which file, which part, what type of change (implementation / refactor / config / copy / structural).\n\n2. Check alignment with goal: does this edit advance the original task? Did scope drift? Did it expand beyond what was needed?\n\n3. Check structural quality: did complexity increase unnecessarily? Did readability worsen? Did a shortcut appear? Does the solution remain maintainable?\n\n4. Check adjacent impact: are neighboring files affected? Are related types, tests, imports, or config impacted? Is the state half-fixed?\n\n5. Choose next step consciously: continue implementation / validate / review / stop and prepare summary. Do not continue by inertia.\n\nBase rule: edit alone is not progress. Every change must make the system better, not just different."
+      }
+    ],
+    "subagentStop": [
+      {
+        "type": "prompt",
+        "timeout": 20,
+        "prompt": "When a subagent completes, do not accept its output automatically.\n\n1. Understand what was returned: what task it had, what scope, what it actually did, what remains open.\n\n2. Separate claims from proof: subagent may say 'done' or 'ready' — verify independently. What actually changed? What is confirmed vs only asserted?\n\n3. Check scope alignment: did it solve the assigned task? Did it drift, under-deliver, or skip a critical piece?\n\n4. Assess quality: is the result strong or superficial? Safe to use as input for the next step?\n\n5. Route explicitly — choose one: accept as valid input / send to review / send to refinement / discard as weak. Do not treat all subagent outputs the same way.\n\nBase rule: subagent completion ≠ task completion. Claims are not proof. Always route consciously."
+      }
+    ],
+    "stop": [
+      {
+        "type": "prompt",
+        "timeout": 20,
+        "prompt": "Before ending the session, capture closure state.\n\n1. Determine how this session ends: task fully completed / stage completed / work partially advanced / blocker found / next iteration needed / review needed / refinement needed.\n\n2. Separate done from not done: what is actually done, what changed, what is unfinished, what was deferred, what must not be presented as finished.\n\n3. Check for missing review: was implementation left without review? User-facing result without quality pass? Structural change without architecture thinking?\n\n4. Update roadmap/_status.md if it exists: reflect the current state accurately.\n\n5. Fix the next step explicitly: what should happen next, who should do it, what decision is needed from user.\n\nBase rule: stop requires closure. Partial work must not be presented as finished. Next step must be explicit."
+      }
+    ]
+  }
+}
