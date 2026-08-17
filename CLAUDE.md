@@ -61,6 +61,7 @@
 
 ### Release
 @.cursor/rules/git-release-discipline.mdc
+@.cursor/rules/deploy-discipline.mdc
 
 ### Tool discipline
 @.cursor/rules/context7-reference-discipline.mdc
@@ -80,10 +81,13 @@
 
 ## MCP
 
-MCP-серверы (context7, playwright, figma) описаны в `.cursor/mcp.json` — он вендорится в каждый проект,
-чтобы облачные агенты видели конфиг в клоне. Локально работают и глобальные настройки `~/.claude.json`.
-Ключи (`CONTEXT7_API_KEY` и т.п.) в облаке НЕ передаются с диска — их надо задать в секретах облачного
-окружения Cursor/Claude. Дисциплину использования задают правила `*-discipline` выше.
+MCP-серверы описаны в `.cursor/mcp.json` — он вендорится в каждый проект, чтобы облачные агенты
+видели конфиг в клоне. Локально работают и глобальные настройки `~/.claude.json`. В этом starter
+подключён только **context7** (справка по библиотекам); figma и playwright намеренно не включены —
+при необходимости добавьте их в `.cursor/mcp.json` по образцу апстрима. Ключи (`CONTEXT7_API_KEY`
+и т.п.) в облаке НЕ передаются с диска — их надо задать в секретах облачного окружения
+Cursor/Claude. Дисциплину использования задают правила `*-discipline` выше (без соответствующего
+MCP-сервера правила `playwright-discipline`/`figma-discipline` просто не активируются).
 
 ## Распространение слоя (vendored, не симлинки)
 

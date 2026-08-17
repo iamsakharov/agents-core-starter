@@ -40,7 +40,7 @@
   agents/, skills/  ← зеркало для Claude Code
   global/           ← глобальный слой Claude (~/.claude/CLAUDE.md)
   settings.json     ← базовые настройки (пустой allowlist — заполните под себя)
-CLAUDE.md     ← канонический always-on слой (17 правил + протоколы сессии)
+CLAUDE.md     ← канонический always-on слой (18 правил + протоколы сессии)
 AGENTS.md     ← точка входа, которую Cursor читает автоматически
 scripts/
   install-global.sh         ← активировать слой глобально в Claude Code (~/.claude)

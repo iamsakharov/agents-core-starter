@@ -1,6 +1,6 @@
 # Rules Index
 
-Краткий индекс всех rules в `.cursor/rules/`. Всего: **17 rules**.
+Краткий индекс всех rules в `.cursor/rules/`. Всего: **18 rules**.
 
 ## Execution flow rules
 
@@ -27,6 +27,7 @@
 ## Release rules
 
 - `git-release-discipline` — после значимой итерации ясный итог, follow-up и явный user approval перед git-операциями.
+- `deploy-discipline` — вывод в прод: на сервере по умолчанию read-only (мутации только с согласия), CI/CD, секреты деплоя в GitHub Secrets, PoC до деплоя.
 
 ## Tool discipline rules
 

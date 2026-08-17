@@ -27,10 +27,25 @@ alwaysApply: true
    в `.cursor/rules/`, агенты/skills/hooks, `CLAUDE.md`, `.cursor/environment.json`, `.cursor/sync.sh`;
 3. заводит `roadmap/` (`_index.md`, `_status.md`, `epics/`, `tasks/`) и `REFINEMENT-LOG.md`;
 4. создаёт заготовку локальных правил `.cursor/rules/local/`;
-5. initial commit → создаёт/привязывает GitHub-репо (`gh`) → `push`;
-6. регистрирует проект в `projects.json` agents-core (для Action-пропагации).
+5. настраивает **secret-гигиену**: `.gitignore` с секрет-паттернами (`.env`, `*.key`, `*.pem`,
+   `id_rsa*`, `*-auth*`) + `.env.example` с именами без значений;
+6. initial commit → создаёт/привязывает GitHub-репо (`gh`) → `push`;
+7. регистрирует проект в `projects.json` agents-core (для Action-пропагации).
 
-Команда (локально):
+## Secret-гигиена с первого коммита
+
+Секреты дешевле не пустить в репо, чем потом вычищать из истории. При заведении проекта:
+
+- реальные значения — только в `.env` (в `.gitignore`), в репо коммитится `.env.example` с именами;
+- SSH-ключи живут в `~/.ssh`, **никогда** в репозитории проекта;
+- секреты для CI/деплоя — в GitHub Secrets, не в файлах;
+- перед первым `push` убедиться, что в индексе нет `.env`, ключей и дампов конфигов.
+
+Паттерны игнора должны быть точечными: слой `.cursor/` и `.claude/` обязан коммититься —
+без него облачные агенты останутся без правил. Дополняет правило `secrets-protection`
+(оно про «не читать и не светить» секреты, это — про «не пустить их в git»).
+
+Команда (локально, с Mac):
 
 ```bash
 bash <путь-к-agents-core>/scripts/create-project.sh <имя> <repo>
@@ -41,6 +56,7 @@ bash <путь-к-agents-core>/scripts/create-project.sh <имя> <repo>
 Правила и весь слой лежат в репо проекта **физически, а не симлинком**. Это обязательное условие
 для облачных агентов (Cursor iOS, Claude Code web): они клонируют только репо проекта в чистую VM,
 где нет ни agents-core, ни `~/.cursor`. Симлинк там мёртв — правила бы не загрузились.
+См. эпик `distributed-cursor-core`.
 
 ## Модель managed / local
 

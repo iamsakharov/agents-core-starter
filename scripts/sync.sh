@@ -132,7 +132,7 @@ sync_file() {
 }
 
 # ── managed dirs (единая модель для всех) ───────────────────────────────────
-sync_managed_dir ".cursor/rules"     # 17 .mdc + INDEX.md, флэтом в корне
+sync_managed_dir ".cursor/rules"     # 18 .mdc + INDEX.md, флэтом в корне
 sync_managed_dir ".cursor/agents"
 sync_managed_dir ".cursor/skills"
 sync_managed_dir ".claude/agents"

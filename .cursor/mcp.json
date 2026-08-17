@@ -4,15 +4,8 @@
       "url": "https://mcp.context7.com/mcp",
       "headers": {
         "CONTEXT7_API_KEY": "${env:CONTEXT7_API_KEY}"
-      }
-    },
-    "playwright": {
-      "type": "stdio",
-      "command": "npx",
-      "args": ["-y", "@playwright/mcp@latest"]
-    },
-    "figma": {
-      "url": "https://mcp.figma.com/mcp"
+      },
+      "type": "http"
     }
   }
 }

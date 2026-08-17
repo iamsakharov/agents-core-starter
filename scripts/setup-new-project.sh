@@ -118,7 +118,36 @@ touch "$GITIGNORE"
 add_ignore() { grep -qxF "$1" "$GITIGNORE" 2>/dev/null || echo "$1" >> "$GITIGNORE"; }
 add_ignore ".DS_Store"
 add_ignore ".cursor/worktrees/"
-echo "  ✓  .gitignore       обновлён"
+
+# секрет-гигиена: секреты не должны попадать в git с самого первого коммита.
+# Паттерны точечные — слой .cursor/ и .claude/ обязан коммититься (нужен облачным агентам).
+add_ignore ".env"
+add_ignore ".env.*"
+add_ignore "!.env.example"
+add_ignore "*.key"
+add_ignore "*.pem"
+add_ignore "*.p12"
+add_ignore "id_rsa*"
+add_ignore "*-auth*"
+add_ignore "secrets.json"
+echo "  ✓  .gitignore       обновлён (+ секрет-паттерны)"
+
+# 4b) .env.example — конвенция: пример без значений коммитится, реальный .env — нет
+ENV_EXAMPLE="$TARGET_DIR/.env.example"
+if [ -f "$ENV_EXAMPLE" ]; then
+  echo "  ✓  .env.example     уже существует"
+else
+  cat > "$ENV_EXAMPLE" << 'ENVEXAMPLE'
+# Пример переменных окружения. Коммитится — здесь только ИМЕНА, без значений.
+# Реальные значения держи в .env (он в .gitignore и НИКОГДА не коммитится).
+#
+# Скопируй файл и заполни:  cp .env.example .env
+
+# API_KEY=
+# DATABASE_URL=
+ENVEXAMPLE
+  echo "  ✓  .env.example     создан"
+fi
 
 echo ""
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"

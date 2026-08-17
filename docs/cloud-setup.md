@@ -48,7 +48,9 @@
 - без ключей соответствующий MCP-сервер в облаке будет недоступен — правила `*-discipline` это
   учитывают (используются точечно).
 
-Playwright и figma по конфигу ключей в env не требуют (figma — по URL, playwright — npx).
+В этом starter из MCP подключён только context7; figma и playwright не включены (при
+необходимости добавьте их в `.cursor/mcp.json` — figma работает по URL, playwright через npx,
+ключей в env они не требуют).
 
 Локально (этот Mac) сервера для Claude ставятся в `~/.claude.json` установщиком `scripts/install-global.sh`;
 `CONTEXT7_API_KEY` должен быть в env (напр. `export` в `~/.zshrc`).

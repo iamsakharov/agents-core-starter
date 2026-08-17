@@ -1,0 +1,41 @@
+# Seed-шаблон docker-compose (agents-core). Скопируй в проект и адаптируй.
+# Запускается на сервере. Реальные значения — из .env рядом с этим файлом (.env в .gitignore!).
+# В этом файле — только имена переменных и плейсхолдеры, никаких секретов.
+
+services:
+  app:
+    build: .
+    image: ${APP_NAME:-app}:latest
+    container_name: ${APP_NAME:-app}
+    restart: unless-stopped
+    ports:
+      - "${APP_PORT:-3000}:3000"
+    environment:
+      NODE_ENV: production
+      # значения приходят из .env на сервере — не из этого файла
+      DATABASE_URL: ${DATABASE_URL}
+      API_KEY: ${API_KEY}
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:3000/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  # Пример БД. Убери, если не нужна.
+  # db:
+  #   image: postgres:16-alpine
+  #   restart: unless-stopped
+  #   environment:
+  #     POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+  #     POSTGRES_DB: ${POSTGRES_DB:-app}
+  #   volumes:
+  #     - pgdata:/var/lib/postgresql/data
+
+# volumes:
+#   pgdata:
