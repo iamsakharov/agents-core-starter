@@ -8,17 +8,46 @@
 
 Чтобы изменения agents-core сами разъезжались по проектам через sync-PR:
 
-1. Создай GitHub PAT: **Settings → Developer settings → Tokens**.
-   - classic: scope `repo`, либо
-   - fine-grained: доступ к целевым репо + права `Contents: write`, `Pull requests: write`.
-2. Добавь его в секреты репо agents-core: **Settings → Secrets and variables → Actions →
-   New repository secret**, имя `PROPAGATE_TOKEN`.
-3. Добавляй проекты в `projects.json` (или создавай через `create-project.sh` — он регистрирует сам).
+1. Создай fine-grained PAT: **Settings → Developer settings → Personal access tokens →
+   Fine-grained tokens → Generate new token**.
+
+   | Поле | Значение |
+   |------|----------|
+   | Token name | `agents-core-propagate` |
+   | Resource owner | твой аккаунт |
+   | Repository access | **All repositories** |
+   | Contents | Read and write |
+   | Pull requests | Read and write |
+
+   **All repositories**, а не список: тогда проекты, созданные позже, попадают под токен
+   автоматически — иначе каждый новый репо пришлось бы дописывать в токен руками.
+   Прав всего два, так что доступ узкий: ни настроек, ни удаления, ни вебхуков.
+   Токен видит только репозитории своего владельца — репо чужих организаций в область
+   действия не попадают.
+
+2. Добавь его в секреты репо agents-core под именем `PROPAGATE_TOKEN`:
+
+   ```bash
+   gh secret set PROPAGATE_TOKEN --repo <owner>/agents-core
+   ```
+
+   Команда спросит значение интерактивно — токен не попадёт в историю shell. Через UI:
+   **Settings → Secrets and variables → Actions → New repository secret**.
+
+3. Добавляй проекты в `projects.json` (или создавай через `create-project.sh` — он регистрирует
+   сам). После регистрации нового проекта **закоммить и запушь agents-core**, иначе пропагация
+   его не увидит.
 
 При push в `main` (изменения в `.claude/**`, `CLAUDE.md`, `AGENTS.md`, `scripts/**`) Action откроет
 в каждом проекте PR `agents-core-sync`. Мержишь PR — проект обновлён.
 
 `GITHUB_TOKEN` по умолчанию не может писать в другие репозитории, поэтому PAT обязателен.
+Classic-токен со scope `repo` тоже работает, но даёт полный доступ ко всем репозиториям —
+для этой задачи избыточно.
+
+**Срок жизни.** У fine-grained токена он ограничен. Когда токен истечёт, пропагация сломается
+тихо: job `propagate` упадёт на шаге открытия PR. Проверить — `gh run list -R <owner>/agents-core`.
+Обновление: сгенерировать токен заново и повторить `gh secret set`.
 
 ---
 
