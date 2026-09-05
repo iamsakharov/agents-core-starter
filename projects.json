@@ -1,0 +1,4 @@
+{
+  "_comment": "Реестр проектов, наследующих слой agents-core. При изменении core GitHub Action открывает sync-PR в каждый из них. Добавляй сюда owner/repo при создании проекта — create-project.sh делает это автоматически.",
+  "projects": []
+}

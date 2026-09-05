@@ -1,0 +1,157 @@
+#!/usr/bin/env bash
+#
+# setup-new-project.sh — настроить agents-core в СУЩЕСТВУЮЩЕЙ папке проекта.
+#
+# Вживляет vendored-слой agents-core (через sync.sh) + создаёт roadmap-структуру
+# и REFINEMENT-LOG. НЕ создаёт git-репо и не пушит — это делает create-project.sh.
+#
+# Usage:
+#   bash /path/to/agents-core/scripts/setup-new-project.sh [project-name] [target-dir]
+
+set -euo pipefail
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+TARGET_DIR="${2:-$(pwd)}"
+TARGET_DIR="$(cd "$TARGET_DIR" && pwd)"
+PROJECT_NAME="${1:-$(basename "$TARGET_DIR")}"
+TODAY="$(date '+%b %d, %Y')"
+
+echo ""
+echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+echo "  agents-core setup: $PROJECT_NAME"
+echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+
+# 1) вживить слой agents-core (правила/агенты/skills/CLAUDE.md/.mcp.json)
+bash "$SCRIPT_DIR/sync.sh" "$TARGET_DIR"
+
+# 2) roadmap-структура
+if [ -d "$TARGET_DIR/roadmap" ]; then
+  echo "  ✓  roadmap/         уже существует"
+else
+  mkdir -p "$TARGET_DIR/roadmap/epics" "$TARGET_DIR/roadmap/tasks"
+
+  cat > "$TARGET_DIR/roadmap/_index.md" << ROADMAP_INDEX
+# Roadmap — $PROJECT_NAME
+
+## Цель проекта
+<!-- Опиши главную цель проекта -->
+
+---
+
+## Текущий приоритет
+<!-- Что активно прямо сейчас -->
+
+---
+
+## Активные эпики
+
+| Эпик | Файл | Статус | Следующий шаг |
+|------|------|--------|----------------|
+|      |      |        |                |
+
+## Завершённые эпики
+
+| Эпик | Дата закрытия |
+|------|---------------|
+|      |               |
+ROADMAP_INDEX
+
+  cat > "$TARGET_DIR/roadmap/_status.md" << STATUS
+# Текущий статус — $PROJECT_NAME
+
+**Обновлено:** $TODAY
+
+---
+
+## Активно сейчас
+
+| Задача | Эпик | Статус | Итерация |
+|--------|------|--------|----------|
+|        |      |        |          |
+
+## На review
+
+| Задача | Эпик | Что проверять |
+|--------|------|----------------|
+| —      | —    | —              |
+
+## В refinement
+
+| Задача | Эпик | Замечания |
+|--------|------|-----------|
+| —      | —    | —         |
+
+## Заблокировано
+
+| Задача | Эпик | Блокер |
+|--------|------|--------|
+| —      | —    | —      |
+STATUS
+
+  echo "  ✓  roadmap/         создан"
+fi
+
+# 3) REFINEMENT-LOG
+if [ -f "$TARGET_DIR/REFINEMENT-LOG.md" ]; then
+  echo "  ✓  REFINEMENT-LOG   уже существует"
+else
+  cat > "$TARGET_DIR/REFINEMENT-LOG.md" << 'REFLOG'
+# Refinement Log
+
+## Открытые замечания
+
+*(нет открытых замечаний)*
+
+---
+
+## Закрытые refinement циклы
+
+| Задача | Итерация | Дата | Результат |
+|--------|----------|------|-----------|
+REFLOG
+  echo "  ✓  REFINEMENT-LOG.md создан"
+fi
+
+# 4) .gitignore — НЕ игнорируем правила (они должны коммититься для облака)
+GITIGNORE="$TARGET_DIR/.gitignore"
+touch "$GITIGNORE"
+add_ignore() { grep -qxF "$1" "$GITIGNORE" 2>/dev/null || echo "$1" >> "$GITIGNORE"; }
+add_ignore ".DS_Store"
+# личные настройки Claude Code: allowlist, локальные пути — не в общий репо
+add_ignore ".claude/settings.local.json"
+
+# секрет-гигиена: секреты не должны попадать в git с самого первого коммита.
+# Паттерны точечные — слой .claude/ обязан коммититься (нужен облачным агентам).
+add_ignore ".env"
+add_ignore ".env.*"
+add_ignore "!.env.example"
+add_ignore "*.key"
+add_ignore "*.pem"
+add_ignore "*.p12"
+add_ignore "id_rsa*"
+add_ignore "*-auth*"
+add_ignore "secrets.json"
+echo "  ✓  .gitignore       обновлён (+ секрет-паттерны)"
+
+# 4b) .env.example — конвенция: пример без значений коммитится, реальный .env — нет
+ENV_EXAMPLE="$TARGET_DIR/.env.example"
+if [ -f "$ENV_EXAMPLE" ]; then
+  echo "  ✓  .env.example     уже существует"
+else
+  cat > "$ENV_EXAMPLE" << 'ENVEXAMPLE'
+# Пример переменных окружения. Коммитится — здесь только ИМЕНА, без значений.
+# Реальные значения держи в .env (он в .gitignore и НИКОГДА не коммитится).
+#
+# Скопируй файл и заполни:  cp .env.example .env
+
+# API_KEY=
+# DATABASE_URL=
+ENVEXAMPLE
+  echo "  ✓  .env.example     создан"
+fi
+
+echo ""
+echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+echo "  Готово. Опиши задачу — оркестратор её разберёт."
+echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+echo ""
