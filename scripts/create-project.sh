@@ -13,14 +13,14 @@
 #           если репо уже существует → просто привяжется как origin
 #
 # Env:
-#   PROJECTS_DIR   родитель для новых папок (default: ~/Projects)
+#   PROJECTS_DIR   родитель для новых папок (default: ~/Dev)
 #   GH_OWNER       владелец репо по умолчанию (default: логин текущего `gh auth`)
 #   VISIBILITY     private|public (default: private)
 
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-PROJECTS_DIR="${PROJECTS_DIR:-$HOME/Projects}"
+PROJECTS_DIR="${PROJECTS_DIR:-$HOME/Dev}"
 GH_OWNER="${GH_OWNER:-$(gh api user --jq .login 2>/dev/null || true)}"
 VISIBILITY="${VISIBILITY:-private}"
 
@@ -58,6 +58,27 @@ if [ -z "$_owner" ] || [ -z "$_name" ]; then
 fi
 REPO_SLUG="$_owner/$_name"
 REPO_URL="https://github.com/${REPO_SLUG}.git"
+
+# ── guard: не заводить проект со слоем в чужом владельце ────────────────────
+# Слой несёт мою операционную модель и ссылки на мою инфраструктуру, поэтому
+# вендорится только в мои репозитории. Для чужих и рабочих — слой из ~/.claude,
+# в репо ничего не коммитится. Обход — AGENTS_CORE_ALLOW_FOREIGN=1.
+ALLOWED_OWNERS="${AGENTS_CORE_ALLOWED_OWNERS:-$GH_OWNER}"
+if [ -n "$ALLOWED_OWNERS" ] \
+   && ! printf '%s' "$ALLOWED_OWNERS" | tr ',' ' ' | tr ' ' '\n' | grep -qxF "$_owner"; then
+  if [ "${AGENTS_CORE_ALLOW_FOREIGN:-}" = "1" ]; then
+    echo "  ⚠  владелец '$_owner' не в списке ($ALLOWED_OWNERS) — продолжаю по AGENTS_CORE_ALLOW_FOREIGN=1" >&2
+  else
+    echo "" >&2
+    echo "  ✗  ОТКАЗ: репо '$REPO_SLUG' принадлежит '$_owner', разрешено — ($ALLOWED_OWNERS)" >&2
+    echo "     Слой agents-core не вживляется в чужие и рабочие репозитории." >&2
+    echo "     Там он работает из ~/.claude, а локальные файлы прячутся" >&2
+    echo "     через .git/info/exclude, не через .gitignore репозитория." >&2
+    echo "     Осознанный обход: AGENTS_CORE_ALLOW_FOREIGN=1" >&2
+    echo "" >&2
+    exit 1
+  fi
+fi
 
 TARGET_DIR="$PROJECTS_DIR/$NAME"
 

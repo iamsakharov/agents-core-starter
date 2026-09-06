@@ -112,7 +112,9 @@ PY
 echo "  [5] личные данные и секреты"
 P_FAIL=0
 PERSONAL='/Users/[A-Za-z0-9._-]+|/home/[A-Za-z0-9._-]+'
-SECRETS='sk-[A-Za-z0-9_-]{16,}|gh[pousr]_[A-Za-z0-9]{20,}|AKIA[0-9A-Z]{12,}|-----BEGIN [A-Z ]*PRIVATE KEY'
+# ключи и токены: OpenAI/Anthropic-style, GitHub, AWS, private keys, Slack, Google,
+# Figma, Context7, JWT, generic bearer. Регекс — не гарантия, а сеть с крупной ячейкой.
+SECRETS='sk-[A-Za-z0-9_-]{16,}|gh[pousr]_[A-Za-z0-9]{20,}|github_pat_[A-Za-z0-9_]{20,}|AKIA[0-9A-Z]{12,}|-----BEGIN [A-Z ]*PRIVATE KEY|xox[baprs]-[A-Za-z0-9-]{10,}|AIza[0-9A-Za-z_-]{30,}|figd_[A-Za-z0-9_-]{20,}|ctx7sk-[A-Za-z0-9_-]{10,}|eyJ[A-Za-z0-9_-]{20,}\.eyJ[A-Za-z0-9_-]{20,}\.[A-Za-z0-9_-]{10,}|[Bb]earer [A-Za-z0-9._-]{30,}'
 
 EXCLUDES=(':!scripts/check-layer.sh')
 if [ -f .check-layer-ignore ]; then
@@ -137,7 +139,15 @@ if git ls-files --error-unmatch .claude/settings.local.json >/dev/null 2>&1; the
   fail ".claude/settings.local.json попал в git — он для личных настроек и не коммитится"
   P_FAIL=1
 fi
-[ "$P_FAIL" = 0 ] && ok "личных данных и секретов не найдено" || true
+# История: секрет, удалённый из рабочего дерева, остаётся в прошлых коммитах и виден
+# каждому, у кого есть доступ. Личные пути по истории не сканируем — их легитимные
+# следы (миграции, старые правила) там есть; секретов легитимных не бывает.
+if hits="$(git log --all -p --no-color -- . "${EXCLUDES[@]}" 2>/dev/null | grep -E "^\+.*($SECRETS)" | head -5)" && [ -n "$hits" ]; then
+  echo "$hits" | cut -c1-120 | sed 's/^/      /'
+  fail "в ИСТОРИИ есть строки, похожие на секреты — считать скомпрометированными, ротировать"
+  P_FAIL=1
+fi
+[ "$P_FAIL" = 0 ] && ok "личных данных и секретов не найдено (рабочее дерево и история)" || true
 
 echo ""
 if [ "$FAIL" = 0 ]; then
